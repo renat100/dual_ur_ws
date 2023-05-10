@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="dual_ur5e_hande">
+    <xacro:property name ="PI" value="3.1415926535897931"/>
+    <xacro:arg name="transmission_hw_interface" default="hardware_interface/PositionJointInterface"/>
+
+    <link name="world"/>
+
+    <!--Dual Platform-->
+    <link name="Platform">
+    <inertial>
+        <mass value="1000" />
+        <origin xyz="0 0 1.8" rpy="0 0 ${PI/2}" />
+        <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 1.8" rpy="0 0 ${PI/2}"/>
+      <geometry>
+        <mesh filename="package://dual_ur5e_hande_description/meshes/dual_arm_mount.stl" scale="0.03 0.03 0.03" />
+      </geometry>
+      <material name="DarkGrey">
+        <color rgba="0.3 0.3 0.3 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 1.8" rpy="0 0 ${PI/2}"/>
+      <geometry>
+        <mesh filename="package://dual_ur5e_hande_description/meshes/dual_arm_mount.stl" scale="0.03 0.03 0.03" />
+      </geometry>
+    </collision>
+    </link>
+ 
+    <gazebo reference="Platform">
+        <material>Gazebo/Grey</material>
+    </gazebo>
+
+    <joint name="fixed" type="fixed">
+        <parent link="world"/>
+        <child link="Platform"/>
+    </joint>
+
+<!-- (1) UR5 (extracted from "ur_description/ur5_upload.launch" from "universal_robot" package-->
+
+    <!-- common stuff -->
+    <xacro:include filename="$(find dual_ur5e_hande_description)/urdf/common.gazebo.xacro" />
+
+    <!-- ur5e -->
+    <xacro:include filename="$(find ur_description)/urdf/inc/ur5e_macro.xacro" />
+
+    <!--left arm-->
+    <xacro:ur5e_robot prefix="left_" transmission_hw_interface="$(arg transmission_hw_interface)"/>
+
+    <!--right arm-->
+    <xacro:ur5e_robot prefix="right_" transmission_hw_interface="$(arg transmission_hw_interface)"/>
+
+    <joint name="left_arm_joint" type="fixed">
+        <parent link="Platform" />
+        <child link = "left_base_link" />
+        <origin xyz="0 0.35 1.8" rpy="${PI/4*3} 0 ${PI}" />
+    </joint>
+
+    <joint name="right_arm_joint" type="fixed">
+        <parent link="Platform" />
+        <child link = "right_base_link" />
+        <origin xyz="0 -0.35 1.8" rpy="${PI/4*3} 0 0" />
+    </joint>
+
+<!--Robotiq HANDe gripper-->
+
+  <xacro:include filename="$(find robotiq_description)/urdf/robotiq_hande_gripper.urdf.xacro"/>
+
+<!--left gripper-->
+  <xacro:robotiq_hande_gripper prefix="left_" parent="left_tool0">
+    <origin xyz="0 0 0.004" rpy="0 0 ${PI/2}"/>
+  </xacro:robotiq_hande_gripper>
+
+
+<!--right gripper-->
+  <xacro:robotiq_hande_gripper prefix="right_" parent="right_tool0">
+    <origin xyz="0 0 0.004" rpy="0 0 ${PI/2}"/>
+  </xacro:robotiq_hande_gripper>
+
+  
+
+
+  <joint name="left_gripper_joint" type="fixed">
+    <parent link="left_tool0"/>
+    <child link="left_hand_e_link"/>
+    <origin xyz="0 0 0.1441" rpy="0 0 0" />
+  </joint>
+
+
+  <joint name="right_gripper_joint" type="fixed">
+    <parent link="right_tool0"/>
+    <child link="right_hand_e_link"/>
+    <origin xyz="0 0 0.1441" rpy="0 0 0" />
+  </joint>
+</robot>
